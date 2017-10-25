@@ -24,6 +24,7 @@ if options.dx:
 else:
     dx = 0.01
 dt = C_r * dx / u
+# add a bit onto t_max to make sure while loop terminates at the correct value
 t_max = 1 + dt/10
 
 # set up the initial grid
@@ -39,13 +40,16 @@ else:
     h_0 = [init_cond.step_profile(i) for i in x]
     h = [init_cond.step_profile(i) for i in x]
     exact_soln = [init_cond.step_profile(i - t_max) for i in x]
-
+    
 # initial time
 t = 0
 
 if options.scheme == 'ftcs':
     scheme = 'ftcs'
     while t < t_max:
+        # incriment time step
+        t += dt
+        # propagate solution forwards
         h = [schemes.ftcs(j, j1, j2, C_r) for (j, j1, j2) in zip(h, h[1:], h[2:])]
         # add values back in for boundary
         if options.init == 'gaussian':
@@ -54,19 +58,21 @@ if options.scheme == 'ftcs':
         else:
             h.insert(0, 1)
             h.append(0)
-        # incriment time step
-        t += dt
 elif options.scheme == 'ftfs':
     scheme = 'ftfs'
     while t < t_max:
+        # incriment time step
+        t += dt
+        # propagate solution forwards
         h = [schemes.ftfs(j, j1, C_r) for (j, j1) in zip(h, h[1:])]
         # add value back in for boundary
         h.append(0)
-        # incriment time step
-        t += dt
 elif options.scheme == 'lax_wendroff':
     scheme = 'lax_wendroff'
     while t < t_max:
+        # incriment time step
+        t += dt
+        # propagate solution forwards
         h = [schemes.lax_wendroff(j, j1, j2, C_r) for (j, j1, j2) in zip(h, h[1:], h[2:])]
         # add value back in for boundary
         if options.init == 'gaussian':
@@ -75,11 +81,12 @@ elif options.scheme == 'lax_wendroff':
         else:
             h.insert(0, 1)
             h.append(0)
-        # incriment time step
-        t += dt
 elif options.scheme == 'beam_warming':
     scheme = 'beam_warming'
     while t < t_max:
+        # incriment time step
+        t += dt
+        # propagate solution forwards
         h = [schemes.beam_warming(j, j1, j2, C_r) for (j, j1, j2) in zip(h, h[1:], h[2:])]
         # add value back in for boundary
         if options.init == 'gaussian':
@@ -88,19 +95,18 @@ elif options.scheme == 'beam_warming':
         else:
             h.insert(0, 1)
             h.insert(0, 1)
-        # incriment time step
-        t += dt
 else:
     scheme = 'ftbs'
     while t < t_max:
+        # incriment time step
+        t += dt
+        # propagate solution forwards
         h = [schemes.ftbs(j, j1, C_r) for (j, j1) in zip(h, h[1:])]
         # add value back in for boundary
         if options.init == 'gaussian':
             h.insert(0, 0)
         else:
             h.insert(0, 1)
-        # incriment time step
-        t += dt
 
 print('L1 norm: ' + str(l1norm.L1(h, exact_soln)))
 pylab.plot(x, h_0, 'r', label = 'initial condition')
